@@ -1,4 +1,6 @@
 from tkinter import *
+import tkinter as tk
+from tkinter import ttk
 import sqlite3
 import tkinter.messagebox
 import datetime
@@ -16,7 +18,8 @@ pamount=[]
 product_list=[]
 
 
-conn = sqlite3.connect("/home/shresthababu/G62/git/Python3-Programming/superStoreSoftware/database/store.db")
+
+conn = sqlite3.connect("/home/babu/G62/Git/Python3-Programming/superStoreSoftware/database/store.db")
 c = conn.cursor()
 
 date = datetime.datetime.now().date()
@@ -78,19 +81,56 @@ class Application:
         self.table_frame = Frame(master, width=550, height=530, bg="white")
         self.table_frame.place(x=400,y=130)
 
+        
+
         self.labal_id = Label(self.middle_frame,text=("Product Id"), font=("arial 15 bold"), bg="grey", fg="black" )
         self.labal_id.place(x=10,y=10)
 
         self.entry_id = Entry(self.middle_frame, width="10",font=("arial 15 bold"), bg="lightblue", fg="black" )
         self.entry_id.place(x=150,y=10)
 
-        self.btn_search_detail= Button(self.middle_frame, text=" Show",width ="7",height=1,font=("arial 12 bold"),bg="green", fg="black", )
-        self.btn_search_detail.place(x=300,y=10)
+        self.btn_show_detail= Button(self.middle_frame, text=" Show",width ="7",height=1,font=("arial 12 bold"),bg="green", fg="black", command=self.show_detail)
+        self.btn_show_detail.place(x=300,y=10)
 
-        self.btn_detail= Button(self.middle_frame, text=" Show All",width ="7",height=1,font=("arial 12 bold"),bg="green", fg="black",)
-        self.btn_detail.place(x=450,y=10)
+        self.btn_show_detailAll= Button(self.middle_frame, text=" Show All",width ="7",height=1,font=("arial 12 bold"),bg="green", fg="black",command=self.show_detailAll)
+        self.btn_show_detailAll.place(x=450,y=10)
 
         
+
+        self.horizontalScrollbar = ttk.Scrollbar(self.table_frame,orient='horizontal')
+        self.verticalScrollbar = ttk.Scrollbar(self.table_frame,orient='vertical')
+
+        self.trv = ttk.Treeview(self.table_frame,height="25",xscrollcommand=self.horizontalScrollbar,yscrollcommand=self.verticalScrollbar)
+
+        self.trv['columns']=('Id','Product','Stocks','CostPrice','Mfd.Date','Exp.Date','Max.Ret.Price','MarkedPrice')
+        
+
+        self.horizontalScrollbar.pack(fill = X, side=BOTTOM)
+        self.verticalScrollbar.pack(fill = BOTH, side=RIGHT)
+        self.horizontalScrollbar.configure(command=self.trv.xview)
+        self.verticalScrollbar.configure(command=self.trv.yview)
+
+        self.trv['show']= 'headings'
+        self.trv.column('Id',width=20,minwidth=20,anchor=tk.CENTER)
+        self.trv.column('Product',width=125,minwidth=100,anchor=tk.CENTER)
+        self.trv.column('Stocks',width=50,minwidth=50,anchor=tk.CENTER)
+        self.trv.column('CostPrice',width=60,minwidth=50,anchor=tk.CENTER)
+        self.trv.column('Mfd.Date',width=80,minwidth=70,anchor=tk.CENTER)
+        self.trv.column('Exp.Date',width=80,minwidth=70,anchor=tk.CENTER)
+        self.trv.column('Max.Ret.Price',width=60,minwidth=60,anchor=tk.CENTER)
+        self.trv.column('MarkedPrice',width=60,minwidth=60,anchor=tk.CENTER)
+
+
+        self.trv.heading('Id',text='Id',anchor=tk.CENTER)
+        self.trv.heading('Product',text='Product',anchor=tk.CENTER)
+        self.trv.heading('Stocks',text='Stock',anchor=tk.CENTER)
+        self.trv.heading('CostPrice',text='C.P.',anchor=tk.CENTER)
+        self.trv.heading('Mfd.Date',text='Mfd.Date',anchor=tk.CENTER)
+        self.trv.heading('Exp.Date',text='Exp.Date',anchor=tk.CENTER)
+        self.trv.heading('Max.Ret.Price',text='M.R.P.',anchor=tk.CENTER)
+        self.trv.heading('MarkedPrice',text='M.P.',anchor=tk.CENTER)
+        self.trv.pack(fill=BOTH)
+        self.show_detailAll()
         
         # for the right frame
         self.labal_date_today= Label(self.right_frame, text= "Today's Date:"+ str(date), font=(" arial 10 bold"), bg="lightblue", fg="black")        
@@ -125,13 +165,7 @@ class Application:
         result = c.execute(sql,(self.get_id,))
 
         for self.r in result:
-            if self.r[2]<=0:
-                delete = "DELETE FROM product_details WHERE product_id=?"
-                a = c.execute(delete,(self.get_id[0]),)
-
-                tkinter.messagebox.showinfo("Error!","Sorry!\nWe have no such Product...")
-
-            elif self.r[2]>0:
+            if self.r[2]>0:
                 self.get_product_id= self.r[0]
                 self.get_product_name= self.r[1]
                 self.get_number_of_stocks= self.r[2]
@@ -140,7 +174,7 @@ class Application:
 
             else:
                 tkinter.messagebox.showinfo("Error!","Sorry!\nWe have no such Product...")
-                
+
 
             self.labal_product_name.configure(text="Product Name:"+ str(self.get_product_name))
             self.labal_number_of_stocks.configure(text="Number of Stocks:"+ str(self.get_number_of_stocks))
@@ -259,7 +293,7 @@ class Application:
     def generate_bill(self, *args, **kwargs):
         
         # create the bill before updating the database
-        directory ="/home/shresthababu/G62/git/Python3-Programming/superStoreSoftware/bill/bill_of_"+str(date)+".docx"
+        directory ="/home/babu/G62/Git/Python3-Programming/superStoreSoftware/bill/bill_"+str(date)+".docx"
         if os.path.exists(directory):
             os.makedirs(directory)
         
@@ -280,7 +314,7 @@ class Application:
         f.write(final)
         r = 0
         for t in pname:
-            f.write("\n\t"+str(r+1)+"\t"+str(pname[r][:10])+"\t\t\t"+str(prate[r])+"\t\t"+str(pquantity[r])+"\t\t"+str(pamount[r]))
+            f.write("\n\t"+str(r+1)+"\t"+str(pname[r][:10])+"\t\t"+str(prate[r])+"\t\t"+str(pquantity[r])+"\t\t"+str(pamount[r]))
             r+=1
         f.write("\n\t---------------------------------------------------------------------------\n\t\t\t\t\t\tYour Total bill is Rs."+ str(sum(pamount)))
         f.write("\n\t\tThank you! for visiting Us.........\t\tUser:")
@@ -323,6 +357,42 @@ class Application:
         del self.total_amount
         
         tkinter.messagebox.showinfo("Success","Done!\nCompletelly...")
+
+    def show_detail(self, *args, **kwargs):
+        self.get_id = self.entry_id.get()
+        # getting the value from the data base nad filling the labal
+        sql = "SELECT  product_id, product_name, number_of_stocks,cost_price, manufacture_date,expiry_date,maximum_retail_price, marked_price,remarks FROM product_details WHERE  product_id=?"
+
+        c.execute(sql,(self.get_id,))
+        
+        self.rows=c.fetchall()
+        if len(self.rows)!=0:
+            self.trv.delete(*self.trv.get_children())
+            self.i =0
+            for row in self.rows:
+            
+                self.trv.insert('',self.i,text='',values=(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8]))
+                self.i+=1
+        self.entry_id.delete(0,END)
+
+    def show_detailAll(self, *args, **kwargs):
+
+        sql = "SELECT  product_id, product_name, number_of_stocks,cost_price, manufacture_date,expiry_date,maximum_retail_price, marked_price,remarks FROM product_details "
+        c.execute(sql)
+        self.rows=c.fetchall()
+        
+        
+        if len(self.rows)!=0:
+            self.trv.delete(*self.trv.get_children())
+            self.i =0
+            for row in self.rows:
+            
+                self.trv.insert('',self.i,text='',values=(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8]))
+                self.i+=1
+        conn.commit()
+        
+        
+          
 
 
 root = Tk()
